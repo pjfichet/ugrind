@@ -9,7 +9,13 @@
 /*
  * Portions Copyright (c) 2005 Gunnar Ritter, Freiburg i. Br., Germany
  *
- * Sccsid @(#)vfontedpr.c	1.4 (gritter) 10/22/05
+ * From Heirloom vGrind "vfontedpr.c	1.4 (gritter) 10/22/05"
+ */
+
+/*
+ * Portions Copyright (c) 2013 Pierre-Jean Fichet, Amiens, France
+ *
+ * $Id$
  */
 
 #include <ctype.h>
