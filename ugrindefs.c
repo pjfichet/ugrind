@@ -15,7 +15,7 @@
 /*
  * Portions Copyright (c) 2013 Pierre-Jean Fichet, Amiens, France
  *
- * $Id$
+ * $Id: grindefs.c,v 0.2 2013/03/13 17:52:53 pj Exp pj $
  */
 	  /* from UCB 5.1 (Berkeley) 6/5/85 */
 
@@ -48,7 +48,7 @@ static	char *tbuf;
 static	char *filename;
 static	int hopcount;	/* detect infinite loops in termcap, init 0 */
 
-static char	*vgrind_msg;
+static char	*grind_msg;
 
 static int	tnchktc(void);
 static int	tnamatch(char *);
@@ -95,8 +95,8 @@ tgetent(char *bp, char *name, char *file)
 				break;
 			}
 			if (cp >= bp+BUFSIZ) {
-				vgrind_msg = "Vgrind entry too long\n";
-				write(2, vgrind_msg, strlen(vgrind_msg));
+				grind_msg = "Grind entry too long\n";
+				write(2, grind_msg, strlen(grind_msg));
 				break;
 			} else
 				*cp++ = c;
@@ -132,8 +132,8 @@ tnchktc(void)
 	p = tbuf + strlen(tbuf) - 2;	/* before the last colon */
 	while (*--p != ':')
 		if (p<tbuf) {
-			vgrind_msg = "Bad vgrind entry\n";
-			write(2, vgrind_msg, strlen(vgrind_msg));
+			grind_msg = "Bad grind entry\n";
+			write(2, grind_msg, strlen(grind_msg));
 			return (0);
 		}
 	p++;
@@ -146,8 +146,8 @@ tnchktc(void)
 		q++;
 	*q = 0;
 	if (++hopcount > MAXHOP) {
-		vgrind_msg = "Infinite tc= loop\n";
-		write(2, vgrind_msg, strlen(vgrind_msg));
+		grind_msg = "Infinite tc= loop\n";
+		write(2, grind_msg, strlen(grind_msg));
 		return (0);
 	}
 	if (tgetent(tcbuf, tcname, filename) != 1)
@@ -156,8 +156,8 @@ tnchktc(void)
 		;
 	l = p - holdtbuf + strlen(q);
 	if (l > BUFSIZ) {
-		vgrind_msg = "Vgrind entry too long\n";
-		write(2, vgrind_msg, strlen(vgrind_msg));
+		grind_msg = "Grind entry too long\n";
+		write(2, grind_msg, strlen(grind_msg));
 		q[BUFSIZ - (p-tbuf)] = 0;
 	}
 	strcpy(p, q+1);

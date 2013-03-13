@@ -15,7 +15,7 @@
 /*
  * Portions Copyright (c) 2013 Pierre-Jean Fichet, Amiens, France
  *
- * $Id$
+ * $Id: grind.c,v 0.2 2013/03/13 17:52:24 pj Exp pj $
  */
 
 #include <ctype.h>
@@ -88,7 +88,7 @@ static int	blklevel;	/* current nesting level */
 static int	prclevel;	/* nesting level at which procedure definitions
 				   may be found, -1 if none currently valid
 				   (meaningful only if l_prclevel is true) */
-static char	*defsfile = LIBDIR "/vgrindefs";	/* name of language definitions file */
+static char	*defsfile = LIBDIR "/grindefs";	/* name of language definitions file */
 static char	pname[BUFSIZ+1];
 
 /*
