@@ -15,7 +15,7 @@
 /*
  * Portions Copyright (c) 2013 Pierre-Jean Fichet, Amiens, France
  *
- * $Id: grind.c,v 0.2 2013/03/13 17:52:24 pj Exp pj $
+ * $Id: grind.c,v 0.3 2013/03/13 18:09:47 pj Exp pj $
  */
 
 #include <ctype.h>
@@ -56,8 +56,14 @@
 /* regular expression routines */
 
 /* regexp.c */
+/*ptrmatch;			pointers to begin and end of a match */
+typedef struct {
+	int test;	// 1 if match succeeded
+	char * beg; // begin of match
+	char * end; // end of match 
+} ptrmatch;
 /*char	*expmatch();		match a string to an expression */
-char	*expmatch(register char *, register char *, register char *);
+ptrmatch expmatch(register ptrmatch, register char *, register char *);
 /*char	*STRNCMP();		a different kind of strncmp */
 int	STRNCMP(register char *, register char *, register int);
 /*char	*convexp();		convert expression to internal form */
@@ -97,6 +103,8 @@ static char	pname[BUFSIZ+1];
 
 static char	*language = "c";/* the language indicator */
 static char	*l_keywds[BUFSIZ/2];	/* keyword table address */
+static char	*l_varbeg;	/* regular expr for variable begin */
+static char *l_varend;	/* delimiter for variable end */
 static char	*l_prcbeg;	/* regular expr for procedure begin */
 static char	*l_combeg;	/* string introducing a comment */
 static char	*l_comend;	/* string ending a comment */
@@ -141,17 +149,17 @@ char	*l_idchars;		/* characters legal in identifiers in addition
 
 extern int	STRNCMP(register char *, register char *, register int);
 extern char	*convexp(char *);
-extern char	*expmatch(register char *, register char *, register char *);
+extern ptrmatch expmatch(register ptrmatch, register char *, register char *);
 extern int	tgetent(char *, char *, char *);
 extern int	tgetnum(char *);
 extern int	tgetflag(char *);
 extern char	*tgetstr(char *, char **);
 
 static void	putScp(char *);
-static void	putKcp(char *, char *, int);
+static char	*putKcp(char *, char *, int);
 static int	tabs(char *, char *);
 static int	width(register char *, register char *);
-static void	putcp(register int);
+static char	*putcp(register int);
 static int	isproc(char *);
 static int	iskw(register char *);
 static char	*fgetline(char **, size_t *, size_t *, FILE *);
@@ -309,6 +317,10 @@ flagsdone:
 	}
 	*cpp = NIL;
     }
+	cp = buf;
+	l_varbeg = convexp (tgetstr ("vb", &cp));
+	cp = buf;
+	l_varend = convexp (tgetstr ("ve", &cp));
     cp = buf;
     l_prcbeg = convexp (tgetstr ("pb", &cp));
     cp = buf;
@@ -464,12 +476,23 @@ putScp(char *os)
 {
     register char *s = os;		/* pointer to unmatched string */
     char dummy[BUFSIZ];			/* dummy to be used by expmatch */
-    char *comptr;			/* end of a comment delimiter */
-    char *acmptr;			/* end of a comment delimiter */
-    char *strptr;			/* end of a string delimiter */
-    char *chrptr;			/* end of a character const delimiter */
-    char *blksptr;			/* end of a lexical block start */
-    char *blkeptr;			/* end of a lexical block end */
+	char vname[BUFSIZ+1];		/* variable name */
+    ptrmatch comptr;			/* end of a comment delimiter */
+    ptrmatch acmptr;			/* end of a comment delimiter */
+    ptrmatch strptr;			/* end of a string delimiter */
+    ptrmatch chrptr;			/* end of a character const delimiter */
+    ptrmatch blksptr;			/* end of a lexical block start */
+    ptrmatch blkeptr;			/* end of a lexical block end */
+	ptrmatch prcptr;			/* end of a procedure delimiter */
+	ptrmatch varptr;			/* end of a variable delimiter */
+	ptrmatch vaeptr;			/* end of a variable delimiter */
+	register ptrmatch z;		/* struct with unmatched string */
+	char *nl;					/* char to print after putKcp (\n) */
+	int i;
+
+	z.test = NIL;
+	z.beg = s;
+	z.end = s;
 
     Start = os;			/* remember the start for expmatch */
     escaped = FALSE;
@@ -489,90 +512,156 @@ putScp(char *os)
      * is one immediately below which procedure definitions are allowed.
      */
     if (l_prclevel && !incomm && !instr && !inchr) {
-	if (expmatch (s, l_prcenable, dummy) != NIL)
+	if ((expmatch (z, l_prcenable, dummy)).test != NIL)
 	    prclevel = blklevel + 1;
     }
 skip:
     do {
+
+	if (!incomm && !inchr) {
 	/* check for string, comment, blockstart, etc */
+	    blkeptr = expmatch (z, l_blkend, dummy);
+		blksptr = expmatch (z, l_blkbeg, dummy);
+	    comptr = expmatch (z, l_combeg, dummy);
+	    acmptr = expmatch (z, l_acmbeg, dummy);
+	    strptr = expmatch (z, l_strbeg, dummy);
+	    chrptr = expmatch (z, l_chrbeg, dummy);
+		prcptr = expmatch (z, l_prcbeg, dummy);
+		varptr = expmatch (z, l_varbeg, dummy);
+/*
+**		if (comptr.test != NIL)
+**			printf ("\n-->com.beg:%s\n-->com.end:%s\n", comptr.beg, comptr.end);
+**		if (acmptr.test != NIL)
+**			printf ("\n-->acm.beg:%s\n-->acm.end:%s\n", acmptr.beg, acmptr.end);
+**		if (strptr.test != NIL)
+**			printf ("\n-->str.beg:%s\n-->str.end:%s\n", strptr.beg, strptr.end);
+**		if (chrptr.test != NIL)
+**			printf ("\n-->chr.beg:%s\n-->chr.end:%s\n", chrptr.beg, chrptr.end);
+**		if (prcptr.test != NIL)
+**			printf ("\n-->prc.beg:%s\n-->prc.end:%s\n", prcptr.beg, prcptr.end);
+*/
+		/* start of a variable? */
+	    if (varptr.test != NIL && !inchr)
+		if ( (varptr.end < prcptr.end || prcptr.test == NIL)
+		  && (varptr.end < strptr.end || strptr.test == NIL)
+		  && (varptr.end < acmptr.end || acmptr.end == NIL)
+		  && (varptr.end < chrptr.end || chrptr.end == NIL)
+		  && (varptr.end < blksptr.end || blksptr.end == NIL)
+		  && (varptr.end < blkeptr.end || blkeptr.end == NIL)
+		  && (varptr.end < comptr.end || comptr.end == NIL)
+		  && (varptr.end < acmptr.end || acmptr.end == NIL)) {
+			nl = putKcp (z.end, varptr.beg-1, FALSE);
+			printf ("\\*(+V%s", nl);
+			z.end = varptr.beg;
+			nl = putKcp (z.end, varptr.end-1, FALSE);
+			printf ("\\*(-V%s", nl);
+			z.end = varptr.end;
+		    continue;
+		}
+	}
+
 	if (!incomm && !instr && !inchr) {
 
-	    blkeptr = expmatch (s, l_blkend, dummy);
-	    blksptr = expmatch (s, l_blkbeg, dummy);
-	    comptr = expmatch (s, l_combeg, dummy);
-	    acmptr = expmatch (s, l_acmbeg, dummy);
-	    strptr = expmatch (s, l_strbeg, dummy);
-	    chrptr = expmatch (s, l_chrbeg, dummy);
-
-	    /* start of a comment? */
-	    if (comptr != NIL)
-		if ((comptr < strptr || strptr == NIL)
-		  && (comptr < acmptr || acmptr == NIL)
-		  && (comptr < chrptr || chrptr == NIL)
-		  && (comptr < blksptr || blksptr == NIL)
-		  && (comptr < blkeptr || blkeptr == NIL)) {
-		    putKcp (s, comptr-1, FALSE);
-		    s = comptr;
-		    incomm = TRUE;
-		    comtype = STANDARD;
-		    if (s != os)
-			printf ("\\c");
-		    printf ("\\c\n'+C\n");
+		/* start of a procedure? */
+	    if (prcptr.test != NIL)
+		if ((prcptr.end < strptr.end || strptr.test == NIL)
+		  && (prcptr.end < acmptr.end || acmptr.test == NIL)
+		  && (prcptr.end < chrptr.end || chrptr.test == NIL)
+		  && (prcptr.end < blksptr.end || blksptr.test == NIL)
+		  && (prcptr.end < blkeptr.end || blkeptr.test == NIL)
+		  && (prcptr.end < comptr.end || comptr.test == NIL)
+		  && (prcptr.end < acmptr.end || acmptr.test == NIL)) {
+			/* assume procedure begin a line */
+			nl = putKcp (z.end, prcptr.beg-1, FALSE);
+			printf ("\\*(+K%s", nl);
+			z.end = prcptr.beg;
+			nl = putKcp (z.end, prcptr.end-1, FALSE);
+			printf ("\\*(-K%s", nl);
+		    z.end = prcptr.end;
 		    continue;
 		}
 
 	    /* start of a comment? */
-	    if (acmptr != NIL)
-		if ((acmptr < strptr || strptr == NIL)
-		  && (acmptr < chrptr || chrptr == NIL)
-		  && (acmptr < blksptr || blksptr == NIL)
-		  && (acmptr < blkeptr || blkeptr == NIL)) {
-		    putKcp (s, acmptr-1, FALSE);
-		    s = acmptr;
+	    if (comptr.test != NIL)
+		if ((comptr.end < strptr.end || strptr.test == NIL)
+		  && (comptr.end < acmptr.end || acmptr.test == NIL)
+		  && (comptr.end < chrptr.end || chrptr.test == NIL)
+		  && (comptr.end < blksptr.end || blksptr.test == NIL)
+		  && (comptr.end < blkeptr.end || blkeptr.test == NIL)) {
+			nl = putKcp (z.end, comptr.beg-1, FALSE); 
+			printf ("\\*(+C%s", nl);
+			z.end = comptr.beg;
+		    nl = putKcp (z.end, comptr.end-1, FALSE);
+			printf ("%s", nl);
+			z.end = comptr.end;
+		    incomm = TRUE;
+		    comtype = STANDARD;
+		    continue;
+		}
+
+	    /* start of a comment? */
+	    if (acmptr.test != NIL)
+		if ((acmptr.end < strptr.end || strptr.test == NIL)
+		  && (acmptr.end < chrptr.end || chrptr.test == NIL)
+		  && (acmptr.end < blksptr.end || blksptr.test == NIL)
+		  && (acmptr.end < blkeptr.end || blkeptr.test == NIL)) {
+			nl = putKcp (z.end, acmptr.beg-1, FALSE);
+			printf ("\\*(+C%s", nl);
+			z.end = acmptr.beg;
+		    nl = putKcp (z.end, acmptr.end-1, FALSE);
+			printf ("%s", nl);
+		    z.end = acmptr.end;
 		    incomm = TRUE;
 		    comtype = ALTERNATE;
-		    if (s != os)
-			printf ("\\c");
-		    printf ("\\c\n'+C\n");
 		    continue;
 		}
 
 	    /* start of a string? */
-	    if (strptr != NIL)
-		if ((strptr < chrptr || chrptr == NIL)
-		  && (strptr < blksptr || blksptr == NIL)
-		  && (strptr < blkeptr || blkeptr == NIL)) {
-		    putKcp (s, strptr-1, FALSE);
-		    s = strptr;
+	    if (strptr.test != NIL)
+		if ((strptr.end < chrptr.end || chrptr.test == NIL)
+		  && (strptr.end < blksptr.end || blksptr.test == NIL)
+		  && (strptr.end < blkeptr.end || blkeptr.test == NIL)) {
+			nl = putKcp (z.end, strptr.beg-1, FALSE); 
+			printf ("\\*(+S%s", nl);
+			z.end = strptr.beg;
+		    nl = putKcp (z.end, strptr.end-1, FALSE); 
+			printf ("%s", nl);
+		    z.end = strptr.end;
 		    instr = TRUE;
 		    continue;
 		}
 
 	    /* start of a character string? */
-	    if (chrptr != NIL)
-		if ((chrptr < blksptr || blksptr == NIL)
-		  && (chrptr < blkeptr || blkeptr == NIL)) {
-		    putKcp (s, chrptr-1, FALSE);
-		    s = chrptr;
+	    if (chrptr.test != NIL)
+		if ((chrptr.end < blksptr.end || blksptr.test == NIL)
+		  && (chrptr.end < blkeptr.end || blkeptr.test == NIL)) {
+			nl = putKcp (z.end, chrptr.beg-1, FALSE);
+			printf ("\\*(+S%s", nl);
+			z.end = chrptr.beg;
+		    nl = putKcp (z.end, chrptr.end-1, FALSE);
+			printf ("%s", nl);
+		    z.end = chrptr.end;
 		    inchr = TRUE;
 		    continue;
 		}
 
 	    /* end of a lexical block */
-	    if (blkeptr != NIL) {
-		if (blkeptr < blksptr || blksptr == NIL) {
+	    if (blkeptr.test != NIL) {
+		if (blkeptr.end < blksptr.end || blksptr.test == NIL) {
 		    /* reset prclevel if necessary */
 		    if (l_prclevel && prclevel == blklevel)
 			prclevel = -1;
-		    putKcp (s, blkeptr - 1, FALSE);
-		    s = blkeptr;
+			nl = putKcp (z.end, blkeptr.beg-1, FALSE);
+			printf ("\\*(+K%s", nl);
+			z.end = blkeptr.beg;
+		    nl = putKcp (z.end, blkeptr.end-1, FALSE);
+			printf ("\\*(-K%s", nl);
+		    z.end = blkeptr.end;
 		    blklevel--;
 		    if (psptr >= 0 && plstack[psptr] >= blklevel) {
 
 			/* end of current procedure */
-			if (s != os)
-			    printf ("\\c");
-			printf ("\\c\n'-F\n");
+			printf ("\n'-F\n");
 			blklevel = plstack[psptr];
 
 			/* see if we should print the last proc name */
@@ -586,69 +675,83 @@ skip:
 	    }
 
 	    /* start of a lexical block */
-	    if (blksptr != NIL) {
-		putKcp (s, blksptr - 1, FALSE);
-		s = blksptr;
+	    if (blksptr.test != NIL) {
+		nl = putKcp (z.end, blksptr.beg-1, FALSE); 
+		printf ("\\*(+K%s", nl);
+		z.end = blksptr.beg;
+		nl = putKcp (z.end, blksptr.end-1, FALSE);
+		printf ("\\*(-K%s", nl);
+		z.end = blksptr.end;
 		blklevel++;
 		continue;
 	    }
 
 	/* check for end of comment */
 	} else if (incomm) {
-	    comptr = expmatch (s, l_comend, dummy);
-	    acmptr = expmatch (s, l_acmend, dummy);
-	    if (((comtype == STANDARD) && (comptr != NIL)) ||
-	        ((comtype == ALTERNATE) && (acmptr != NIL))) {
+	    comptr = expmatch (z, l_comend, dummy);
+	    acmptr = expmatch (z, l_acmend, dummy);
+	    if (((comtype == STANDARD) && (comptr.test != NIL)) ||
+	        ((comtype == ALTERNATE) && (acmptr.test != NIL))) {
 		if (comtype == STANDARD) {
-		    putKcp (s, comptr-1, TRUE);
-		    s = comptr;
+		    nl = putKcp (z.end, comptr.end-1, TRUE);
+			printf ("\\*(-C%s", nl);
+		    z.end = comptr.end;
 		} else {
-		    putKcp (s, acmptr-1, TRUE);
-		    s = acmptr;
+			nl = putKcp (z.end, acmptr.end-1, TRUE); 
+			printf ("\\*(-C%s", nl);
+			z.end = acmptr.end;
 		}
 		incomm = FALSE;
-		printf("\\c\n'-C\n");
 		continue;
 	    } else {
-		putKcp (s, s + strlen(s) -1, TRUE);
-		s = s + strlen(s);
+		nl = putKcp (z.end, z.end + strlen(z.end) -1, TRUE);
+		printf ("%s", nl);
+		z.end = z.end + strlen(z.end);
 		continue;
 	    }
 
 	/* check for end of string */
 	} else if (instr) {
-	    if ((strptr = expmatch (s, l_strend, dummy)) != NIL) {
-		putKcp (s, strptr-1, TRUE);
-		s = strptr;
+		strptr = expmatch (z, l_strend, dummy);
+	    if (strptr.test != NIL) {
+		nl = putKcp (z.end, strptr.end-1, TRUE);
+		printf ("\\*(-S%s", nl);
+		z.end = strptr.end;
 		instr = FALSE;
 		continue;
 	    } else {
-		putKcp (s, s+strlen(s)-1, TRUE);
-		s = s + strlen(s);
+		nl = putKcp (z.end, z.end+strlen(z.end)-1, TRUE);
+		printf ("%s", nl);
+		z.end = z.end + strlen(z.end);
 		continue;
 	    }
 
 	/* check for end of character string */
 	} else if (inchr) {
-	    if ((chrptr = expmatch (s, l_chrend, dummy)) != NIL) {
-		putKcp (s, chrptr-1, TRUE);
-		s = chrptr;
+		chrptr = expmatch (z, l_chrend, dummy);
+	    if (chrptr.test != NIL) {
+		nl = putKcp (z.end, chrptr.end-1, TRUE);
+		printf ("\\*(-S%s", nl);
+		z.end = chrptr.end;
 		inchr = FALSE;
 		continue;
 	    } else {
-		putKcp (s, s+strlen(s)-1, TRUE);
-		s = s + strlen(s);
+		nl = putKcp (z.end, z.end+strlen(z.end)-1, TRUE);
+		printf ("%s", nl);
+		z.end = z.end + strlen(z.end);
 		continue;
 	    }
 	}
 
 	/* print out the line */
-	putKcp (s, s + strlen(s) -1, FALSE);
-	s = s + strlen(s);
-    } while (*s);
+	printf ("\\&"); // escape blank lines
+	nl = putKcp (z.end, z.end + strlen(z.end) -1, FALSE);
+	printf ("%s", nl);
+	z.end = z.end + strlen(z.end);
+    } while (*z.end);
 }
 
-static void
+static char *
 putKcp (
     char	*start,		/* start of string to write */
     char	*end,		/* end of string to write */
@@ -656,6 +759,7 @@ putKcp (
 )
 {
     int i;
+	char *nl = "";		/* newline or not printable */
     int xfld = 0;
 
     while (start <= end) {
@@ -689,15 +793,15 @@ putKcp (
 		if (i > 0) {
 		    printf("\\*(+K");
 		    do 
-			putcp(*start++);
+			nl = putcp(*start++);
 		    while (--i > 0);
 		    printf("\\*(-K");
 		    continue;
 		}
 	    }
-
-	putcp (*start++);
+	nl = putcp (*start++);
     }
+	return nl;
 }
 
 
@@ -741,7 +845,7 @@ width(register char *s, register char *os)
 	return (i);
 }
 
-static void
+static char *
 putcp(register int c)
 {
 
@@ -832,9 +936,13 @@ putcp(register int c)
 		if (c < 040)
 			putchar('^'), c |= '@';
 	case '\t':
-	case '\n':
 		putchar(c);
+		break;
+
+	case '\n':
+		return "\n";
 	}
+	return ""; // not printed char
 }
 
 /*
@@ -843,9 +951,13 @@ putcp(register int c)
 static boolean
 isproc(char *s)
 {
+    ptrmatch z;			/* structure to test */
+	z.beg = s;
+	z.end = s;
+	z.test = NIL;
     pname[0] = '\0';
     if (l_prclevel ? (prclevel == blklevel) : (!l_toplex || blklevel == 0))
-	if (expmatch (s, l_prcbeg, pname) != NIL) {
+	if ((expmatch (z, l_prcbeg, pname)).test != NIL) {
 	    return (TRUE);
 	}
     return (FALSE);
