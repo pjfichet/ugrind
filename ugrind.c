@@ -15,7 +15,7 @@
 /*
  * Portions Copyright (c) 2013 Pierre-Jean Fichet, Amiens, France
  *
- * $Id: grind.c,v 0.3 2013/03/13 18:09:47 pj Exp pj $
+ * $Id: grind.c,v 0.6 2013/03/14 17:41:13 pj Exp pj $
  */
 
 #include <ctype.h>
@@ -79,7 +79,7 @@ static boolean	inchr;		/* in a string constant */
 static boolean	nokeyw = FALSE;	/* no keywords being flagged */
 static boolean	doindex = FALSE;/* form an index */
 static boolean twocol = FALSE;	/* in two-column mode */
-static boolean	filter = FALSE;	/* act as a filter (like eqn) */
+static boolean	filter = TRUE;	/* act as a filter (like eqn) */
 static boolean	pass = FALSE;	/* when acting as a filter, pass indicates
 				 * whether we are currently processing
 				 * input.
@@ -155,6 +155,7 @@ extern int	tgetnum(char *);
 extern int	tgetflag(char *);
 extern char	*tgetstr(char *, char **);
 
+static int getlang(void);
 static void	putScp(char *);
 static char	*putKcp(char *, char *, int);
 static int	tabs(char *, char *);
@@ -228,18 +229,6 @@ main(int argc, char **argv)
 	    argc--, argv++;
 	    break;
 
-	case 'f':				/* -f */
-	    /* Act as a filter like eqn. */
-	    filter = 1;
-	    /* 
-	     * Slide remaining arguments down one position and postpend "-",
-	     * to force reading from stdin.
-	     */
-	    for (i = 0; i < argc - 1; i++)
-		argv[i] = argv[i + 1];	
-	    argv[argc - 1] = "-";
-	    continue;
-
 	case 'h':				/* -h [header] */
 	    /* Specify header string. */
 	    if (argc == 1) {
@@ -287,82 +276,20 @@ main(int argc, char **argv)
     }
 
 flagsdone:
-
     /*
-     * Get the language definition from the defs file.
-     */
-    i = tgetent (defs, language, defsfile);
-    if (i == 0) {
-	fprintf (stderr, "no entry for language %s\n", language);
-	exit (0);
-    } else  if (i < 0) {
-	fprintf (stderr,  "cannot find vgrindefs file %s\n", defsfile);
-	exit (0);
-    }
-    cp = strings;
-    if (tgetstr ("kw", &cp) == NIL)
-	nokeyw = TRUE;
-    else  {
-	char **cpp;
-
-	cpp = l_keywds;
-	cp = strings;
-	while (*cp) {
-	    while (*cp == ' ' || *cp =='\t')
-		*cp++ = '\0';
-	    if (*cp)
-		*cpp++ = cp;
-	    while (*cp != ' ' && *cp  != '\t' && *cp)
-		cp++;
-	}
-	*cpp = NIL;
-    }
-	cp = buf;
-	l_varbeg = convexp (tgetstr ("vb", &cp));
-	cp = buf;
-	l_varend = convexp (tgetstr ("ve", &cp));
-    cp = buf;
-    l_prcbeg = convexp (tgetstr ("pb", &cp));
-    cp = buf;
-    l_combeg = convexp (tgetstr ("cb", &cp));
-    cp = buf;
-    l_comend = convexp (tgetstr ("ce", &cp));
-    cp = buf;
-    l_acmbeg = convexp (tgetstr ("ab", &cp));
-    cp = buf;
-    l_acmend = convexp (tgetstr ("ae", &cp));
-    cp = buf;
-    l_strbeg = convexp (tgetstr ("sb", &cp));
-    cp = buf;
-    l_strend = convexp (tgetstr ("se", &cp));
-    cp = buf;
-    l_blkbeg = convexp (tgetstr ("bb", &cp));
-    cp = buf;
-    l_blkend = convexp (tgetstr ("be", &cp));
-    cp = buf;
-    l_chrbeg = convexp (tgetstr ("lb", &cp));
-    cp = buf;
-    l_chrend = convexp (tgetstr ("le", &cp));
-    cp = buf;
-    l_prcenable = convexp (tgetstr ("px", &cp));
-    cp = idbuf;
-    l_idchars = tgetstr ("id", &cp);
-    /* Set default, for compatibility with old version */
-    if (l_idchars == NIL)
-	l_idchars = "_";
-    l_escape = '\\';
-    l_onecase = tgetflag ("oc");
-    l_toplex = tgetflag ("tl");
-    l_prclevel = tgetflag ("pl");
-
-    /*
-     * Emit a call to the initialization macro.  If not in filter mode, emit a
-     * call to the vS macro, so that tmac.vgrind can uniformly assume that all
+     * If not in filter mode, emit a call to the vS macro,
+	 * so that the macro file can uniformly assume that all
      * program input is bracketed with vS-vE pairs.
      */
-    printf("'vI\n");
-    if (!filter)
-	printf("'vS\n");
+    if (!filter){
+		printf("'vS\n");
+	}
+
+	/* If no more args, postpend "-" to get input from stdin */
+	if (argc == 0 ) {
+	    argv[0] = "-";
+		argc = 1;
+	}
 
     if (doindex) {
 	/*
@@ -438,10 +365,27 @@ flagsdone:
 	    }
 	    if (buf[0] == '.') {
 		printf("%s", buf);
-		if (!strncmp (buf+1, "vS", 2))
+		if (!strncmp (buf+1, "vS", 2)){
 		    pass = TRUE;
-		if (!strncmp (buf+1, "vE", 2))
+			/* get language */
+			char *dp;
+			char *lp;
+			char lang[20];
+			lp = lang;
+			dp=buf+3;
+			while ( *dp++ != ' ' && *dp != '\t')
+				;
+			while ( *dp != ' ' && *dp != '\t' && *dp != '\n')
+					*lp++=*dp++;
+			*lp='\0';
+			language=lang;
+			if (!getlang())
+				pass = FALSE;
+		}
+		if (!strncmp (buf+1, "vE", 2)) {
 		    pass = FALSE;
+			language= "c";
+		}
 		continue;
 	    }
 	    prccont = FALSE;
@@ -468,6 +412,93 @@ flagsdone:
     exit(0);
     /* NOTREACHED */
 }
+
+static int
+getlang(void)
+{
+    int i;
+    char *cp;
+    size_t size = 0;
+    char defs[2 * BUFSIZ];
+    char strings[2 * BUFSIZ];
+    char *buf = NULL;
+    char idbuf[256];	/* enough for all 8 bit chars */
+
+    buf = malloc(size = BUFSIZ);
+
+    /*
+     * Get the language definition from the defs file.
+     */
+    i = tgetent (defs, language, defsfile);
+    if (i == 0) {
+	fprintf (stderr, "no entry for language %s in %s\n", language, defsfile);
+	//exit (0);
+	return 0;
+    } else  if (i < 0) {
+	fprintf (stderr,  "cannot find grindefs file %s\n", defsfile);
+	//exit (0);
+	return 0;
+    }
+    cp = strings;
+    if (tgetstr ("kw", &cp) == NIL)
+		nokeyw = TRUE;
+    else  {
+	char **cpp;
+
+	cpp = l_keywds;
+	cp = strings;
+	while (*cp) {
+	    while (*cp == ' ' || *cp =='\t')
+		*cp++ = '\0';
+	    if (*cp)
+		*cpp++ = cp;
+	    while (*cp != ' ' && *cp  != '\t' && *cp)
+		cp++;
+	}
+	*cpp = NIL;
+    }
+	cp = buf;
+	l_varbeg = convexp (tgetstr ("vb", &cp));
+	cp = buf;
+	l_varend = convexp (tgetstr ("ve", &cp));
+    cp = buf;
+    l_prcbeg = convexp (tgetstr ("pb", &cp));
+    cp = buf;
+    l_combeg = convexp (tgetstr ("cb", &cp));
+    cp = buf;
+    l_comend = convexp (tgetstr ("ce", &cp));
+    cp = buf;
+    l_acmbeg = convexp (tgetstr ("ab", &cp));
+    cp = buf;
+    l_acmend = convexp (tgetstr ("ae", &cp));
+    cp = buf;
+    l_strbeg = convexp (tgetstr ("sb", &cp));
+    cp = buf;
+    l_strend = convexp (tgetstr ("se", &cp));
+    cp = buf;
+    l_blkbeg = convexp (tgetstr ("bb", &cp));
+    cp = buf;
+    l_blkend = convexp (tgetstr ("be", &cp));
+    cp = buf;
+    l_chrbeg = convexp (tgetstr ("lb", &cp));
+    cp = buf;
+    l_chrend = convexp (tgetstr ("le", &cp));
+    cp = buf;
+    l_prcenable = convexp (tgetstr ("px", &cp));
+    cp = idbuf;
+    l_idchars = tgetstr ("id", &cp);
+    /* Set default, for compatibility with old version */
+    if (l_idchars == NIL)
+	l_idchars = "_";
+    l_escape = '\\';
+    l_onecase = tgetflag ("oc");
+    l_toplex = tgetflag ("tl");
+    l_prclevel = tgetflag ("pl");
+
+	return 1;
+}
+
+
 
 #define isidchr(c) (isalnum(c) || ((c) != NIL && strchr(l_idchars, (c)) != NIL))
 
