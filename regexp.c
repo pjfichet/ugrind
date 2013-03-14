@@ -15,7 +15,7 @@
 /*
  * Portions Copyright (c) 2013 Pierre-Jean Fichet, Amiens, France
  *
- * $Id: regexp.c,v 0.2 2013/03/13 17:53:05 pj Exp $
+ * $Id: regexp.c,v 0.3 2013/03/14 10:40:47 pj Exp pj $
  */
 	  /* from UCB 5.1 (Berkeley) 6/5/85 */
 
@@ -343,6 +343,7 @@ expmatch (
     register char *cs;		/* the current symbol */
 	ptrmatch ptrnil, ptr, s1;	/* temporary struct of pointers */
     boolean matched;		/* a temporary boolean */
+	char *p;
 	int i=0;
 
     /* initial conditions */
@@ -436,6 +437,10 @@ expmatch (
 		 *  remaining parts of the expression to any subset
 		 *  of the string.
 		 */
+		/*	Match the next expression, if that match, record
+		 *  the string between this match and the previous one,
+		 *  and test if the string only contain alphanumeric.
+		 */
 		s1 = s;
 		do {
 		    ptr = expmatch (s1, MNEXT(cs), mstring);
@@ -452,8 +457,22 @@ expmatch (
 		    } else if (ptr.test != NIL) {
 
 			/* not optional and we still matched */
-			return (ptrnil);
-		    }
+
+				/* in case MNEXT was null, record chars: */
+				i=0;
+				while ( isidchr(s1.end[i]) ) {
+					mstring[i]=s1.end[i];
+					*s.end++;
+					i++;
+				}
+				mstring[i]='\0';
+				if (i > 0){
+					s.test = 1;
+					return s;
+				} else
+				return (ptrnil);
+			}
+			
 		    if (!isidchr(*s1.end))
 			return (ptrnil);
 		    if (*s1.end == '\\')
