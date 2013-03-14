@@ -27,8 +27,57 @@
 #
 # Portions Copyright (c) 2013 Pierre-Jean Fichet, Amiens, France
 #
-# $Id$
+# $Id: grindefs.src,v 0.2 2013/03/13 17:52:59 pj Exp pj $
+
+#	FORMAT OF THIS FILE
 #
+#	pb: procedure (should contain a \p).
+#	px: procedure definition can be found on next level
+#		used for lisp ( (...) )
+#	pl: nesting level at which procedure can be found
+#	tl: procedure only defined at top lex level
+#	ab, ae: comment begin and end
+#	bb, be: block begin, end
+#	cb, ce: comment begin, end
+#	lb, le: character constant begin, end
+#	sb, se: string begin, end
+#	vb: variable (should contain a \p).
+#	kw: keyword
+#	id: character legal in identifier, default: _
+#	oc: upper and lowercase are equivalent
+#
+#	\?: last match was optional
+#	\a: match any number of chars
+#	\d: match any number of space or tabs
+#	\e: don't match if escaped
+#	\p: match any number of alphanumeric, and copy to name
+#	\|: alternation
+#	\(, \): grouping, for alternation
+#	^: start of line
+#	$: end of line
+#
+MAKE|make|makefile|MAKEFILE:\
+	:id=.$<?@:\
+	:pb=^\p\::\
+	:vb=\$\(\p\):\
+	:sb=	:se=$:\
+	:lb==:le=$:\
+	:cb=#:ce=$:\
+	:kw=shell $@ $< $?:
+POSTXML|postxml:\
+	:bb=#[:be=#]:vb=#\(\p#\):\
+	:ab=^#-:ae=$:
+XML|xml:\
+	:id=<>!;-:\
+	:bb=(</|<):be=(/>|>):\
+	:cb=<!--:ce=--!>:sb=":se=\e":\
+	:vb=&\p;:
+refer|REFER:\
+	:bb=^%\p:be= :
+idx|IDX:\
+	:id=, -'>:\
+	:pb=^\p\:\::\
+	:kw=,:
 model|mod|m:\
 	:pb=^\d(space\d\p\drep)|(\p\dis|inline|public\dbeginproc):\
 	:bb=\dbeginproc|space|case\d:be=\dendproc|end\d|;:\
@@ -58,7 +107,7 @@ C|c:\
 	:kw=asm auto break case char continue default do double else enum\
 	extern float for fortran goto if int long register return short\
 	sizeof static struct switch typedef union unsigned void while #define\
-	#else #endif #if #ifdef #ifndef #include #undef # define endif\
+	#else #endif #if #ifdef #ifndef #include #undef #define #endif\
 	ifdef ifndef include undef defined:
 ISP|isp|i:\
 	:cb=!:ce=!|$:oc:\
@@ -66,6 +115,7 @@ ISP|isp|i:\
 	neq next not or otherwise repeat restart resume sr0 sr1 srd srr sl0 sl1\
 	sld slr tst xor:
 SH|sh:\
+	:id=|<>&:\
 	:pb=(;|^)\d?\p\(\)(\d|{):\
 	:ab=\$#:ae=(\d?|\a?):\
 	:bb={:be=}:cb=#:ce=$:sb=":se=\e":lb=':\
@@ -73,7 +123,8 @@ SH|sh:\
 	:kw=break case cd continue do done \
 	elif else esac eval exec exit export \
 	fi for if in then while until \
-	read readonly set shift test trap umask wait:
+	read readonly set shift test trap umask wait \
+	| < > &:
 CSH|csh:\
 	:cb=#:ce=$:sb=":se=\e":lb=':\
 	:ab=\$\a?#:ae=(\d?|\a?):\
