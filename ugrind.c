@@ -15,7 +15,7 @@
 /*
  * Portions Copyright (c) 2013 Pierre-Jean Fichet, Amiens, France
  *
- * $Id: grind.c,v 0.5 2013/03/14 17:43:53 pj Exp pj $
+ * $Id: grind.c,v 0.6 2013/03/14 17:51:25 pj Exp pj $
  */
 
 #include <ctype.h>
@@ -68,6 +68,9 @@ ptrmatch expmatch(register ptrmatch, register char *, register char *);
 int	STRNCMP(register char *, register char *, register int);
 /*char	*convexp();		convert expression to internal form */
 char	*convexp(char *);
+
+/* grindroff.c */
+int trtroff(FILE *);
 
 /*
  *	The state variables
@@ -135,6 +138,8 @@ static boolean l_prclevel;	/* procedure definitions valid only within
 static short tabsize = 4;
 
 static int	mb_cur_max;
+
+extern int trtroff(FILE *);
 
 /*
  *  global variables also used by expmatch
@@ -233,6 +238,7 @@ main(int argc, char **argv)
 	case 'l':				/* -l<language> */
 	    /* Specify the language. */
 	    language = cp + 1;
+		filter = 0;
 	    break;
 
 	case 'n':				/* -n */
@@ -282,6 +288,17 @@ flagsdone:
 	}
 	argc--, argv++;
 
+	/* if language is troff, divert to grindroff.c */
+	if ( strncmp(language, "troff", 5) == 0){
+		trtroff(in);
+		pass = FALSE;
+	}
+	/* else, use grindefs */
+	else {
+		if (!getlang())
+			exit(0);
+	}
+
 	/*
 	 * Reinitialize for the current file.
 	 */
@@ -308,7 +325,6 @@ flagsdone:
 		printf(".bp\n");
 	    }
 	    if (buf[0] == '.') {
-		printf("%s", buf);
 		if (!strncmp (buf+1, "vS", 2)){
 		    pass = TRUE;
 			/* get language */
@@ -322,15 +338,46 @@ flagsdone:
 			while ( *dp != ' ' && *dp != '\t' && *dp != '\n')
 					*lp++=*dp++;
 			*lp='\0';
-			language=lang;
-			if (!getlang())
+			/* divert to grindroff.c */
+			if ( strncmp(lang, "troff", 5) == 0){
+				printf(".vS troff\n");
+				trtroff(in);
+				buf[0]='.';
+				buf[1]='v';
+				buf[2]='E';
+				buf[3]='\n';
+				buf[4]='\0';
 				pass = FALSE;
+			}
+			/* or use grindefs */
+			else {
+				language=lang;
+				if (!getlang())
+					pass = FALSE;
+			}
+
+		printf("%s", buf);
+		continue;
 		}
 		if (!strncmp (buf+1, "vE", 2)) {
+			/* reinitialize for next code part */
+			language= "c";	
+			incomm = FALSE;
+			instr = FALSE;
+			inchr = FALSE;
+			escaped = FALSE;
+			blklevel = 0;
+			prclevel = -1;
+			for (psptr=0; psptr<PSMAX; psptr++) {
+				pstack[psptr][0] = '\0';
+				plstack[psptr] = 0;
+			}
+			psptr = -1;
+			/* end reinitialize */
 		    pass = FALSE;
-			language= "c";
+			printf("%s", buf);
+			continue;
 		}
-		continue;
 	    }
 	    prccont = FALSE;
 	    if (!filter || pass)
@@ -851,7 +898,6 @@ putcp(register int c)
 	case '.':
 		printf("\\&.");
 		break;
-
 
 	default:
 		putchar (c);
