@@ -5,10 +5,10 @@
 #else
 #define	USED
 #endif
-static const char rcsid[] USED = "$Id$";
+static const char rcsid[] USED = "$Id: version.c,v 0.2 2013/03/13 17:56:29 pj Exp pj $";
 /* SLIST
- * grind.c,v 0.2 2013/03/13 17:52:24 pj Exp pj $
- * grindefs.c,v 0.2 2013/03/13 17:52:53 pj Exp pj $
+ * grind.c,v 0.4 2013/03/14 10:33:07 pj Exp pj $
+ * grindefs.c,v 0.3 2013/03/13 18:10:05 pj Exp pj $
  * grindefs.src,v 0.2 2013/03/13 17:52:59 pj Exp pj $
- * regexp.c,v 0.2 2013/03/13 17:53:05 pj Exp pj $
+ * regexp.c,v 0.4 2013/03/14 10:44:00 pj Exp pj $
 */
