@@ -15,7 +15,7 @@
 /*
  * Portions Copyright (c) 2013 Pierre-Jean Fichet, Amiens, France
  *
- * $Id$
+ * $Id: regexp.c,v 0.2 2013/03/13 17:53:05 pj Exp $
  */
 	  /* from UCB 5.1 (Berkeley) 6/5/85 */
 
@@ -31,6 +31,13 @@ typedef int	boolean;
 extern boolean	l_onecase;	/* true if upper and lower equivalent */
 extern char	*l_idchars;	/* set of characters legal in identifiers
 				   in addition to letters and digits */
+
+typedef struct {
+	int test;	// TRUE if match
+	char * beg; // begin of match
+	char * end; // end of match 
+} ptrmatch;
+
 
 static void expconv(void);
 
@@ -324,20 +331,27 @@ expconv(void)
 extern boolean escaped;		/* true if we are currently escaped */
 extern char *Start;		/* start of string */
 
-char *
+#include <stdio.h>
+
+ptrmatch
 expmatch (
-    register char *s,		/* string to check for a match in */
+	register ptrmatch s,	/* struct to check for a match in */
     register char *re,		/* a converted irregular expression */
     register char *mstring	/* where to put whatever matches a \p */
 )
 {
     register char *cs;		/* the current symbol */
-    register char *ptr,*s1;	/* temporary pointer */
+	ptrmatch ptrnil, ptr, s1;	/* temporary struct of pointers */
     boolean matched;		/* a temporary boolean */
+	int i=0;
 
     /* initial conditions */
+	ptr.test = FALSE;
+	ptrnil.test=NIL;
+	ptrnil.beg=NIL;
+	ptrnil.end=NIL;
     if (re == NIL)
-	return (NIL);
+	return (ptrnil);
     cs = re;
     matched = FALSE;
 
@@ -347,11 +361,11 @@ expmatch (
 
 	/* try to match a string */
 	case STR:
-	    matched = !STRNCMP (s, SSTR(cs), SCNT(cs));
+		matched = !STRNCMP (s.end, SSTR(cs), SCNT(cs));
 	    if (matched) {
 
 		/* hoorah it matches */
-		s += SCNT(cs);
+		s.end += SCNT(cs);
 		cs = SNEXT(cs);
 	    } else if (*cs & ALT) {
 
@@ -365,7 +379,7 @@ expmatch (
 	    } else {
 
 		/* no match, error return */
-		return (NIL);
+		return (ptrnil);
 	    }
 	    break;
 
@@ -388,7 +402,7 @@ expmatch (
 	    /* this is a grouping, recurse */
 	    case '(':
 		ptr = expmatch (s, ONEXT(cs), mstring);
-		if (ptr != NIL) {
+		if (ptr.test != NIL) {
 
 		    /* the subexpression matched */
 		    matched = 1;
@@ -404,7 +418,7 @@ expmatch (
 		} else {
 
 		    /* no match, error return */
-		    return (NIL);
+		    return (ptrnil);
 		}
 		cs = OPTR(cs);
 		break;
@@ -425,29 +439,30 @@ expmatch (
 		s1 = s;
 		do {
 		    ptr = expmatch (s1, MNEXT(cs), mstring);
-		    if (ptr != NIL && s1 != s) {
+		    if (ptr.test != NIL && s1.end != s.end) {
 
 			/* we have a match, remember the match */
-			strncpy (mstring, s, s1 - s);
-			mstring[s1 - s] = '\0';
+			strncpy (mstring, s.end, s1.end - s.end);
+			mstring[s1.end - s.end] = '\0';
 			return (ptr);
-		    } else if (ptr != NIL && (*cs & OPT)) {
+		    } else if (ptr.test != NIL && (*cs & OPT)) {
 
 			/* it was aoptional so no match is ok */
 			return (ptr);
-		    } else if (ptr != NIL) {
+		    } else if (ptr.test != NIL) {
 
 			/* not optional and we still matched */
-			return (NIL);
+			return (ptrnil);
 		    }
-		    if (!isidchr(*s1))
-			return (NIL);
-		    if (*s1 == '\\')
+		    if (!isidchr(*s1.end))
+			return (ptrnil);
+		    if (*s1.end == '\\')
 			escaped = escaped ? FALSE : TRUE;
 		    else
 			escaped = FALSE;
-		} while (*s1++);
-		return (NIL);
+		/* increment while not match: */
+		} while (*s1.end++);
+		return (ptrnil);
 
 	    /* try to match anything */
 	    case 'a':
@@ -458,45 +473,47 @@ expmatch (
 		 */
 		s1 = s;
 		do {
+			s1.beg = s1.end;
+
 		    ptr = expmatch (s1, MNEXT(cs), mstring);
-		    if (ptr != NIL && s1 != s) {
+		    if (ptr.test != NIL && s1.end != s.end) {
 
 			/* we have a match */
 			return (ptr);
-		    } else if (ptr != NIL && (*cs & OPT)) {
+		    } else if (ptr.test != NIL && (*cs & OPT)) {
 
 			/* it was aoptional so no match is ok */
 			return (ptr);
-		    } else if (ptr != NIL) {
+		    } else if (ptr.test != NIL) {
 
 			/* not optional and we still matched */
-			return (NIL);
+			return (ptrnil);
 		    }
-		    if (*s1 == '\\')
+		    if (*s1.end == '\\')
 			escaped = escaped ? FALSE : TRUE;
 		    else
 			escaped = FALSE;
-		} while (*s1++);
-		return (NIL);
+		} while (*s1.end++);
+		return (ptrnil);
 
 	    /* fail if we are currently escaped */
 	    case 'e':
 		if (escaped)
-		    return(NIL);
+		    return(ptrnil);
 		cs = MNEXT(cs); 
 		break;
 
 	    /* match any number of tabs and spaces */
 	    case 'd':
 		ptr = s;
-		while (*s == ' ' || *s == '\t')
-		    s++;
-		if (s != ptr || s == Start) {
+		while (*s.end == ' ' || *s.end == '\t')
+		    s.end++;
+		if (s.end != ptr.end || s.end == Start) {
 
 		    /* match, be happy */
 		    matched = 1;
 		    cs = MNEXT(cs); 
-		} else if (*s == '\n' || *s == '\0') {
+		} else if (*s.end == '\n' || *s.end == '\0') {
 
 		    /* match, be happy */
 		    matched = 1;
@@ -514,15 +531,15 @@ expmatch (
 		} else
 
 		    /* no match, error return */
-		    return (NIL);
+		    return (ptrnil);
 		break;
 
 	    /* check for end of line */
 	    case '$':
-		if (*s == '\0' || *s == '\n') {
+		if (*s.end == '\0' || *s.end == '\n') {
 
 		    /* match, be happy */
-		    s++;
+		    s.end++;
 		    matched = 1;
 		    cs = MNEXT(cs);
 		} else if (*cs & ALT) {
@@ -538,12 +555,12 @@ expmatch (
 		} else
 
 		    /* no match, error return */
-		    return (NIL);
+		    return (ptrnil);
 		break;
 
 	    /* check for start of line */
 	    case '^':
-		if (s == Start) {
+		if (s.end == Start) {
 
 		    /* match, be happy */
 		    matched = 1;
@@ -561,15 +578,17 @@ expmatch (
 		} else
 
 		    /* no match, error return */
-		    return (NIL);
+		    return (ptrnil);
 		break;
 
 	    /* end of a subexpression, return success */
 	    case ')':
+		s.test = 1;
 		return (s);
 	    }
 	    break;
 	}
     }
+	s.test = 1;
     return (s);
 }
