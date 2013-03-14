@@ -15,7 +15,7 @@
 /*
  * Portions Copyright (c) 2013 Pierre-Jean Fichet, Amiens, France
  *
- * $Id: grind.c,v 0.6 2013/03/14 17:41:13 pj Exp pj $
+ * $Id: grind.c,v 0.5 2013/03/14 17:43:53 pj Exp pj $
  */
 
 #include <ctype.h>
@@ -77,8 +77,6 @@ static boolean	incomm;		/* in a comment of the primary type */
 static boolean	instr;		/* in a string constant */
 static boolean	inchr;		/* in a string constant */
 static boolean	nokeyw = FALSE;	/* no keywords being flagged */
-static boolean	doindex = FALSE;/* form an index */
-static boolean twocol = FALSE;	/* in two-column mode */
 static boolean	filter = TRUE;	/* act as a filter (like eqn) */
 static boolean	pass = FALSE;	/* when acting as a filter, pass indicates
 				 * whether we are currently processing
@@ -134,7 +132,7 @@ static boolean l_prclevel;	/* procedure definitions valid only within
  *  for the benefit of die-hards who aren't convinced that tabs
  *  occur every eight columns
  */
-static short tabsize = 8;
+static short tabsize = 4;
 
 static int	mb_cur_max;
 
@@ -167,7 +165,7 @@ static char	*fgetline(char **, size_t *, size_t *, FILE *);
 
 /*
  * The code below emits troff macros and directives that consume part of the
- * troff macro and register space.  See tmac.vgrind for an enumeration of
+ * troff macro and register space.  See the manual page for an enumeration of
  * these macros and registers.
  */
 
@@ -182,7 +180,6 @@ main(int argc, char **argv)
     char idbuf[256];	/* enough for all 8 bit chars */
     char strings[2 * BUFSIZ];
     char defs[2 * BUFSIZ];
-    int needbp = 0;
     int i;
     char *cp;
 
@@ -217,12 +214,6 @@ main(int argc, char **argv)
 	     */
 	    goto flagsdone;
 
-	case '2':				/* -2 */
-	    /* Enter two column mode. */
-	    twocol = 1;
-	    printf("'nr =2 1\n");
-	    break;
-
 	case 'd':				/* -d <defs-file> */
 	    /* Specify the language description file. */
 	    defsfile = argv[1];
@@ -232,10 +223,10 @@ main(int argc, char **argv)
 	case 'h':				/* -h [header] */
 	    /* Specify header string. */
 	    if (argc == 1) {
-		printf("'ds =H\n");
+		printf(".vH \\n(.F\n");
 		break;
 	    }
-	    printf("'ds =H %s\n", argv[1]);
+	    printf(".vH %s\n", argv[1]);
 	    argc--, argv++;
 	    break;
 
@@ -249,26 +240,11 @@ main(int argc, char **argv)
 	    nokeyw = 1;
 	    break;
 
-	case 's':				/* -s<size> */
-	    /* Specify the font size. */
-	    i = 0;
-	    cp++;
-	    while (*cp)
-		i = i * 10 + (*cp++ - '0');
-	    printf("'nr vP %d\n", i);
-	    break;
 
 	case 't':				/* -t */
 	    /* Specify a nondefault tab size. */
 	    tabsize = 4;
 	    break;
-
-	case 'x':				/* -x */
-	    /* Build an index. */
-	    doindex = 1;
-	    /* This option implies "-n" as well; turn it on. */
-	    argv[0] = "-n";
-	    continue;
 	}
 
 	/* Advance to next argument. */
@@ -290,18 +266,6 @@ flagsdone:
 	    argv[0] = "-";
 		argc = 1;
 	}
-
-    if (doindex) {
-	/*
-	 * XXX:	Hard-wired spacing information.  This should probably turn
-	 *	into the emission of a macro invocation, so that tmac.vgrind
-	 *	can make up its own mind about what spacing is appropriate.
-	 */
-	if (twocol)
-	    printf("'ta 2.5i 2.75i 4.0iR\n'in .25i\n");
-	else
-	    printf("'ta 4i 4.25i 5.5iR\n'in .5i\n");
-    }
 
     while (argc > 0) {
 	if (strcmp(argv[0], "-") == 0) {
@@ -332,29 +296,9 @@ flagsdone:
 	    plstack[psptr] = 0;
 	}
 	psptr = -1;
-	printf("'-F\n");
 	if (!filter) {
-	    char *cp;
-
-	    printf(".ds =F %s\n", fname);
-	    if (needbp) {
-		needbp = 0;
-		printf(".()\n");
-		printf(".bp\n");
-	    }
-	    fstat(fileno(in), &stbuf);
-	    cp = ctime(&stbuf.st_mtime);
-	    cp[16] = '\0';
-	    cp[24] = '\0';
-	    printf(".ds =M %s %s\n", cp+4, cp+20);
-	    printf("'wh 0 vH\n");
-	    printf("'wh -1i vF\n");
-	}
-	if (needbp && filter) {
-	    needbp = 0;
-	    printf(".()\n");
-	    printf(".bp\n");
-	}
+		printf(".vF %s\n", fname); /* New file name */
+   	}
 
 	/*
 	 *	MAIN LOOP!!!
@@ -401,7 +345,6 @@ flagsdone:
 	    margin = 0;
 	}
 
-	needbp = 1;
 	fclose(in);
     }
 
@@ -530,7 +473,7 @@ putScp(char *os)
     if (nokeyw || incomm || instr)
 	goto skip;
     if (isproc(s)) {
-	printf("'FN %s\n", pname);
+	printf("'vO %s\n", pname);
 	if (psptr < PSMAX-1) {
 	    ++psptr;
 	    strncpy (pstack[psptr], pname, PNAMELEN);
@@ -692,7 +635,7 @@ skip:
 		    if (psptr >= 0 && plstack[psptr] >= blklevel) {
 
 			/* end of current procedure */
-			printf ("\n'-F\n");
+			printf ("\n'vC\n");
 			blklevel = plstack[psptr];
 
 			/* see if we should print the last proc name */
@@ -794,28 +737,6 @@ putKcp (
     int xfld = 0;
 
     while (start <= end) {
-	if (doindex) {
-	    if (*start == ' ' || *start == '\t') {
-		if (xfld == 0)	
-		    printf("");
-		printf("\t");
-		xfld = 1;
-		while (*start == ' ' || *start == '\t')
-		    start++;
-		continue;
-	    }
-	}
-
-	/* take care of nice tab stops */
-	if (*start == '\t') {
-	    while (*start == '\t')
-		start++;
-	    i = tabs(Start, start) - margin / tabsize;
-	    printf ("\\h'|%dn'",
-		    i * (tabsize == 4 ? 5 : 10) + 1 - margin % tabsize);
-	    continue;
-	}
-
 	if (!nokeyw && !force)
 	    if (  (*start == '#'   ||  isidchr(*start)) 
 	       && (start == Start || !isidchr(start[-1]))
@@ -888,14 +809,6 @@ putcp(register int c)
 	case '\f':
 		break;
 
-	case '{':
-		printf("\\*(+K{\\*(-K");
-		break;
-
-	case '}':
-		printf("\\*(+K}\\*(-K");
-		break;
-
 	case '\\':
 		printf("\\e");
 		break;
@@ -919,53 +832,33 @@ putcp(register int c)
 		 * former behavior of unconditionally rendering the characters
 		 * as accents.  (See bug 1040343.)
 		 */
-
-	case '`':
-		if (incomm)
-			printf("`");
-		else
-			printf("\\`");
-		break;
-
-	case '\'':
-		if (incomm)
-			printf("'");
-		else
-			printf("\\'");
-		break;
+/*
+**	case '`':
+**		if (incomm)
+**			printf("`");
+**		else
+**			printf("\\`");
+**		break;
+**
+**	case '\'':
+**		if (incomm)
+**			printf("'");
+**		else
+**			printf("\\'");
+**		break;
+*/
 
 	case '.':
 		printf("\\&.");
 		break;
 
-		/*
-		 * The following two cases contain special hacking
-		 * to make C-style comments line up.  The tests aren't
-		 * really adequate; they lead to grotesqueries such
-		 * as italicized multiplication and division operators.
-		 * However, the obvious test (!incomm) doesn't work,
-		 * because incomm isn't set until after we've put out
-		 * the comment-begin characters.  The real problem is
-		 * that expmatch() doesn't give us enough information.
-		 */
-
-	case '*':
-		if (instr || inchr)
-			printf("*");
-		else
-			printf("\\f2*\\fP");
-		break;
-
-	case '/':
-		if (instr || inchr)
-			printf("/");
-		else
-			printf("\\f2\\h'\\w' 'u-\\w'/'u'/\\fP");
-		break;
 
 	default:
-		if (c < 040)
-			putchar('^'), c |= '@';
+		putchar (c);
+		break;
+/*		if (c < 040)
+**			putchar('^'), c |= '@';
+*/
 	case '\t':
 		putchar(c);
 		break;
