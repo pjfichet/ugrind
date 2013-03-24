@@ -15,7 +15,7 @@
 /*
  * Portions Copyright (c) 2013 Pierre-Jean Fichet, Amiens, France
  *
- * $Id: grind.c,v 0.6 2013/03/14 17:51:25 pj Exp pj $
+ * $Id: grind.c,v 0.7 2013/03/14 18:19:48 pj Exp pj $
  */
 
 #include <ctype.h>
@@ -69,7 +69,7 @@ int	STRNCMP(register char *, register char *, register int);
 /*char	*convexp();		convert expression to internal form */
 char	*convexp(char *);
 
-/* grindroff.c */
+/* ugrindroff.c */
 int trtroff(FILE *);
 
 /*
@@ -95,7 +95,7 @@ static int	blklevel;	/* current nesting level */
 static int	prclevel;	/* nesting level at which procedure definitions
 				   may be found, -1 if none currently valid
 				   (meaningful only if l_prclevel is true) */
-static char	*defsfile = LIBDIR "/grindefs";	/* name of language definitions file */
+static char	*defsfile = LIBDIR "/ugrindefs";	/* name of language definitions file */
 static char	pname[BUFSIZ+1];
 
 /*
@@ -288,12 +288,12 @@ flagsdone:
 	}
 	argc--, argv++;
 
-	/* if language is troff, divert to grindroff.c */
+	/* if language is troff, divert to ugrindroff.c */
 	if ( strncmp(language, "troff", 5) == 0){
 		trtroff(in);
 		pass = FALSE;
 	}
-	/* else, use grindefs */
+	/* else, use ugrindefs */
 	else {
 		if (!getlang())
 			exit(0);
@@ -338,7 +338,7 @@ flagsdone:
 			while ( *dp != ' ' && *dp != '\t' && *dp != '\n')
 					*lp++=*dp++;
 			*lp='\0';
-			/* divert to grindroff.c */
+			/* divert to ugrindroff.c */
 			if ( strncmp(lang, "troff", 5) == 0){
 				printf(".vS troff\n");
 				trtroff(in);
@@ -349,7 +349,7 @@ flagsdone:
 				buf[4]='\0';
 				pass = FALSE;
 			}
-			/* or use grindefs */
+			/* or use ugrindefs */
 			else {
 				language=lang;
 				if (!getlang())
@@ -425,7 +425,7 @@ getlang(void)
 	//exit (0);
 	return 0;
     } else  if (i < 0) {
-	fprintf (stderr,  "cannot find grindefs file %s\n", defsfile);
+	fprintf (stderr,  "cannot find ugrindefs file %s\n", defsfile);
 	//exit (0);
 	return 0;
     }
