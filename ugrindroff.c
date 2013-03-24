@@ -27,15 +27,15 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: grindroff.c,v 0.1 2013/03/14 18:22:32 pj Exp pj $
+ * $Id: grindroff.c,v 0.1 2013/03/14 18:27:04 pj Exp pj $
  */
 
 /*
- * grindroff.c
+ * ugrindroff.c
  * The following code insert color definition
  * in troff code between vS and vE macros.
- * It is hardcoded, instead of using grindefs,
- * because it's simpler than hacking grindefs.c.
+ * It is hardcoded, instead of using ugrindefs,
+ * because it's simpler than hacking ugrindefs.c.
  */
 
 #include <stdio.h>
