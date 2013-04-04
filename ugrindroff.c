@@ -27,7 +27,7 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: grindroff.c,v 0.1 2013/03/14 18:27:04 pj Exp pj $
+ * $Id: ugrindroff.c,v 0.2 2013/03/24 11:04:59 pj Exp pj $
  */
 
 /*
@@ -87,13 +87,13 @@ trescape(FILE *fp)
 
   // newline
   if (c=='\n'){
-	printf("\\*(+V\\*e\n");
+	printf("\\*(+C\\*e\\*(-C\n");
 	nl=1;
   }
 
   // double slash
   else if (c=='\\'){
-    printf("\\*(+V\\*e");
+    printf("\\*(+C\\*e\\*(-C");
     trescape(fp); 
   }
 
