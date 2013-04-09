@@ -27,7 +27,7 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: ugrindroff.c,v 0.2 2013/03/24 11:04:59 pj Exp pj $
+ * $Id: ugrindroff.c,v 0.3 2013/04/04 19:34:54 pj Exp pj $
  */
 
 /*
@@ -216,7 +216,7 @@ return nl;
 ** insert color definition
 */
 int
-trmacro(FILE *fp)
+trmacro(FILE *fp, char dot)
 {
   char c;
   char *p;
@@ -235,7 +235,7 @@ trmacro(FILE *fp)
   *p++=c;
   // macro is an escaped string, use escape
   if( c=='\\'){
-    printf("\\*(+K\\&.\\*(-K%s", space);	
+    printf("\\*(+K\\&%c\\*(-K%s", dot, space);	
     nl=trescape(fp);
   }
   else {
@@ -254,7 +254,7 @@ trmacro(FILE *fp)
     }
     else {
       // print macro name
-      printf("\\*(+K\\&.\\*(-K%s", space);
+      printf("\\*(+K\\&%c\\*(-K%s", dot, space);
       printf("\\*(+K%s\\*(-K", name);
       putchar(c);
       if(c=='\n');
@@ -346,7 +346,7 @@ trtroff(FILE *fp)
     }
     // macro
     else if ( nl==1 && (c=='.' || c=='\'') ) {
-      	nl=trmacro(fp);
+      	nl=trmacro(fp, c);
       	if (nl==2)
         	break;
     }
