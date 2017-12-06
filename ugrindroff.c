@@ -27,7 +27,7 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: ugrindroff.c,v 0.3 2013/04/04 19:34:54 pj Exp pj $
+ * $Id: ugrindroff.c,v 0.4 2013/04/09 16:55:53 pj Exp pj $
  */
 
 /*
@@ -39,6 +39,7 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 
 /* trprinter:
 ** print a char,
@@ -130,7 +131,7 @@ trescape(FILE *fp)
 		printf("\\*(-V\\*(+S");
 		while( (c=getc(fp)) != d)
 			trprinter(c);
-		printf("\\*(-S\\*(+V%s\\*(-V", d);
+		printf("\\*(-S\\*(+V%c\\*(-V", d);
 	}
 	else {
 		putchar(c);
@@ -161,7 +162,7 @@ trescape(FILE *fp)
       printf("[\\*(-V\\*(+S");
       while( (c=getc(fp)) != ']')
         trprinter(c);
-      printf("\\*(-S\\*(+V]\\*(-V", c);
+      printf("\\*(-S\\*(+V]\\*(-V");
     }
   else{
     putchar(c);
@@ -257,7 +258,7 @@ trmacro(FILE *fp, char dot)
       printf("\\*(+K\\&%c\\*(-K%s", dot, space);
       printf("\\*(+K%s\\*(-K", name);
       putchar(c);
-      if(c=='\n');
+      if(c=='\n')
         nl=1;
   
       // macro is if or ie
@@ -338,7 +339,6 @@ trtroff(FILE *fp)
   int nl=1; // 1 after "\n"
 
   // printf( ".vS troff\n");
-
   while( (c=getc(fp)) != EOF){
     if ( c=='\n'){
       putchar(c);
