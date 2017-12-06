@@ -15,7 +15,7 @@
 /*
  * Portions Copyright (c) 2013 Pierre-Jean Fichet, Amiens, France
  *
- * $Id: regexp.c,v 0.3 2013/03/14 10:40:47 pj Exp pj $
+ * $Id: regexp.c,v 0.4 2013/03/14 10:44:00 pj Exp pj $
  */
 	  /* from UCB 5.1 (Berkeley) 6/5/85 */
 
@@ -343,7 +343,6 @@ expmatch (
     register char *cs;		/* the current symbol */
 	ptrmatch ptrnil, ptr, s1;	/* temporary struct of pointers */
     boolean matched;		/* a temporary boolean */
-	char *p;
 	int i=0;
 
     /* initial conditions */
@@ -462,7 +461,7 @@ expmatch (
 				i=0;
 				while ( isidchr(s1.end[i]) ) {
 					mstring[i]=s1.end[i];
-					*s.end++;
+					s.end++;
 					i++;
 				}
 				mstring[i]='\0';
