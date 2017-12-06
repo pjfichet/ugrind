@@ -15,7 +15,7 @@
 /*
  * Portions Copyright (c) 2013 Pierre-Jean Fichet, Amiens, France
  *
- * $Id: grind.c,v 0.7 2013/03/14 18:19:48 pj Exp pj $
+ * $Id: ugrind.c,v 0.8 2013/03/24 11:01:13 pj Exp pj $
  */
 
 #include <ctype.h>
@@ -161,8 +161,11 @@ extern char	*tgetstr(char *, char **);
 static int getlang(void);
 static void	putScp(char *);
 static char	*putKcp(char *, char *, int);
+#ifdef USED
+/* Unused functions */
 static int	tabs(char *, char *);
 static int	width(register char *, register char *);
+#endif
 static char	*putcp(register int);
 static int	isproc(char *);
 static int	iskw(register char *);
@@ -179,13 +182,16 @@ main(int argc, char **argv)
 {
     FILE *in;
     char *fname;
-    struct stat stbuf;
+    struct stat;
     char *buf = NULL;
     size_t size = 0;
-    char idbuf[256];	/* enough for all 8 bit chars */
+#ifdef USED
+	/* Unused variables */
+	struct stbuf;
+    char idbuf[256];	// enough for all 8 bit chars
     char strings[2 * BUFSIZ];
     char defs[2 * BUFSIZ];
-    int i;
+#endif
     char *cp;
 
     setlocale(LC_CTYPE, "");
@@ -497,7 +503,6 @@ putScp(char *os)
 {
     register char *s = os;		/* pointer to unmatched string */
     char dummy[BUFSIZ];			/* dummy to be used by expmatch */
-	char vname[BUFSIZ+1];		/* variable name */
     ptrmatch comptr;			/* end of a comment delimiter */
     ptrmatch acmptr;			/* end of a comment delimiter */
     ptrmatch strptr;			/* end of a string delimiter */
@@ -506,10 +511,15 @@ putScp(char *os)
     ptrmatch blkeptr;			/* end of a lexical block end */
 	ptrmatch prcptr;			/* end of a procedure delimiter */
 	ptrmatch varptr;			/* end of a variable delimiter */
-	ptrmatch vaeptr;			/* end of a variable delimiter */
 	register ptrmatch z;		/* struct with unmatched string */
 	char *nl;					/* char to print after putKcp (\n) */
+#ifdef USED
+	/* Unused variable */
 	int i;
+	char vname[BUFSIZ+1];		/* variable name */
+	ptrmatch vaeptr;			/* end of a variable delimiter */
+#endif
+
 
 	z.test = NIL;
 	z.beg = s;
@@ -671,7 +681,7 @@ skip:
 		if (blkeptr.end < blksptr.end || blksptr.test == NIL) {
 		    /* reset prclevel if necessary */
 		    if (l_prclevel && prclevel == blklevel)
-			prclevel = -1;
+				prclevel = -1;
 			nl = putKcp (z.end, blkeptr.beg-1, FALSE);
 			printf ("\\*(+K%s", nl);
 			z.end = blkeptr.beg;
@@ -681,15 +691,15 @@ skip:
 		    blklevel--;
 		    if (psptr >= 0 && plstack[psptr] >= blklevel) {
 
-			/* end of current procedure */
-			printf ("\n'vC\n");
-			blklevel = plstack[psptr];
+				/* end of current procedure */
+				printf ("\n'vC\n");
+				blklevel = plstack[psptr];
 
-			/* see if we should print the last proc name */
-			if (--psptr >= 0)
-			    prccont = TRUE;
-			else
-			    psptr = -1;
+				/* see if we should print the last proc name */
+				if (--psptr >= 0)
+			    	prccont = TRUE;
+				else
+			    	psptr = -1;
 		    }
 		    continue;
 		}
@@ -781,7 +791,10 @@ putKcp (
 {
     int i;
 	char *nl = "";		/* newline or not printable */
-    int xfld = 0;
+#ifdef USED
+	/* Unused variable */
+	int xfld = 0;
+#endif
 
     while (start <= end) {
 	if (!nokeyw && !force)
@@ -803,14 +816,18 @@ putKcp (
 	return nl;
 }
 
-
+#ifdef USED
+/* Unused function */
 static int
 tabs(char *s, char *os)
 {
 
     return (width(s, os) / tabsize);
 }
+#endif
 
+#ifdef USED
+/* Unused function */
 static int
 width(register char *s, register char *os)
 {
@@ -843,6 +860,7 @@ width(register char *s, register char *os)
 	}
 	return (i);
 }
+#endif
 
 static char *
 putcp(register int c)
@@ -950,7 +968,7 @@ iskw(register char *s)
 	while (++cp, isidchr(*cp))
 		i++;
 
-	while (cp = *ss++) {
+	while ( (cp = *ss++) ) {
 		if (!STRNCMP(s,cp,i) && !isidchr(cp[i]))
 			return (i);
 	}
