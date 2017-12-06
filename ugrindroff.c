@@ -27,7 +27,7 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: ugrindroff.c,v 0.4 2013/04/09 16:55:53 pj Exp pj $
+ * $Id: ugrindroff.c,v 0.5 2017/12/06 08:30:41 pj Exp pj $
  */
 
 /*
@@ -256,7 +256,16 @@ trmacro(FILE *fp, char dot)
     else {
       // print macro name
       printf("\\*(+K\\&%c\\*(-K%s", dot, space);
-      printf("\\*(+K%s\\*(-K", name);
+      printf("\\*(+K");
+	  int i;
+	  for (i=0; name[i]!='\0'; i++) {
+		  if (name[i] == '\\') {
+			  printf("\\*e");
+		  } else {
+			  putchar(name[i]);
+		  }
+	  }
+	  printf("\\*(-K");
       putchar(c);
       if(c=='\n')
         nl=1;
