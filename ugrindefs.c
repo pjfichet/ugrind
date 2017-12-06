@@ -15,7 +15,7 @@
 /*
  * Portions Copyright (c) 2013 Pierre-Jean Fichet, Amiens, France
  *
- * $Id: grindefs.c,v 0.3 2013/03/13 18:10:05 pj Exp pj $
+ * $Id: ugrindefs.c,v 0.4 2013/03/24 11:03:25 pj Exp pj $
  */
 	  /* from UCB 5.1 (Berkeley) 6/5/85 */
 
@@ -306,7 +306,7 @@ tdecode(register char *str, char **area)
 	register int c;
 
 	cp = *area;
-	while (c = *str++) {
+	while ( (c = *str++) ) {
 	    if (c == ':' && *(cp-1) != '\\')
 		break;
 	    *cp++ = c;
