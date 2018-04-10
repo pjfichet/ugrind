@@ -1,14 +1,14 @@
 # Packaging directory
 DESTDIR=
 # Prefix directory
-PREFIX=/usr/local
+PREFIX=/opt/utroff
 # Where to place binaries
 # and where to find utroff tools
 BINDIR=$(PREFIX)/bin
 # Where to place manuals
 MANDIR=$(PREFIX)/man
 # Where to place libraries
-LIBDIR=$(PREFIX)/share/ugrind
+LIBDIR=$(PREFIX)/lib/
 
 # C compiler
 CC=cc
