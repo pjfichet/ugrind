@@ -1,84 +1,62 @@
 # Packaging directory
 DESTDIR=
 # Prefix directory
-PREFIX=/opt/utroff
+PREFIX=/usr/local
 # Where to place binaries
 # and where to find utroff tools
 BINDIR=$(PREFIX)/bin
 # Where to place manuals
 MANDIR=$(PREFIX)/man
 # Where to place libraries
-LIBDIR=$(PREFIX)/lib
+LIBDIR=$(PREFIX)/share/ugrind
 
-# Install binary
-INSTALL = /usr/bin/install
 # C compiler
-CC=gcc
+CC=cc
 # compilier flags
-CFLAGS=-O
-# Compiler warning
-WARN=-Wall -Wno-maybe-uninitialized
-# Support for locale specific character 
-EUC=-DEUC
+CFLAGS=-Wall -Wno-maybe-uninitialized -O
+FLAGS= -DLIBDIR='"$(LIBDIR)"'
 # Linker flags
 LDFLAGS=
-# Additionnal libraries to link with
-LIBS=
-# C preprocessor flags.
-# Use -D_GNU_SOURCE for Linux with GNU libc.
-# Use -D_INCLUDE__STDC_A1_SOURCE for HP-UX.
-CPPFLAGS=-D_GNU_SOURCE
-# Strip
-STRIP=strip -s -R .comment -R .note
 
-FLAGS= -DLIBDIR='"$(LIBDIR)"'
 
-MAN1=ugrind.1
-BIN=ugrind
-LIB=ugrindefs
+all: ugrind ugrind.1 ugrindefs
 
 OBJ = regexp.o ugrind.o ugrindefs.o version.o ugrindroff.o
+.c.o:
+	$(CC) $(CFLAGS) $(WARN) $(FLAGS) -c $<
 
-INSTALLED=$(MAN1:%=$(DESTDIR)$(MANDIR)/man1/%) \
-	$(BIN:%=$(DESTDIR)$(BINDIR)/%) \
-	$(LIB:%=$(DESTDIR)$(LIBDIR)/%)
+ugrind: $(OBJ)
+	$(CC) $(LDFLAGS) $(OBJ) -o $@
 
+ugrindefs: ugrindefs.src
+	cp $< $@
 
-all: $(BIN) $(MAN1) $(LIB)
+%.1: %.man
+	sed -e "s|@BINDIR@|$(BINDIR)|g" \
+		-e "s|@LIBDIR@|$(LIBDIR)|g" $< > $@
 
 clean:
-	rm -f $(OBJ) $(BIN) $(MAN1) $(LIB)
+	rm -f $(OBJ) ugrind ugrind.1 ugrindefs
+
+INSTALLED=$(DESTDIR)$(MANDIR)/man1/ugrind.1 \
+		  $(DESTDIR)$(BINDIR)/ugrind \
+		  $(DESTDIR)$(LIBDIR)/ugrindefs
+
+$(DESTDIR)$(MANDIR)/man1/%: %
+	test -d $(DESTDIR)$(MANDIR) || mkdir -p $(DESTDIR)$(MANDIR)
+	install -c -m 644 $< $@
+
+$(DESTDIR)$(BINDIR)/%: % $(DESTDIR)$(BINDIR)
+	test -d $(DESTDIR)$(BINDIR) || mkdir -p $(DESTDIR)$(BINDIR)
+	install -c $< $@
+
+$(DESTDIR)$(LIBDIR)/%: %
+	test -d $(DESTDIR)$(LIBDIR) || mkdir -p $(DESTDIR)$(LIBDIR)
+	install -c -m 644 $< $@
 
 install: $(INSTALLED)
 
 uninstall:
 	rm -f $(INSTALLED)
-
-.c.o:
-	$(CC) $(CFLAGS) $(WARN) $(FLAGS) $(EUC) $(CPPFLAGS) -c $<
-
-ugrind: $(OBJ)
-	$(CC) $(LDFLAGS) $(OBJ) $(LIBS) -o $@
-
-ugrindefs: ugrindefs.src
-	cp $< $@
-
-%.1 %.7: %.man
-	sed -e "s|@BINDIR@|$(BINDIR)|g" \
-		-e "s|@LIBDIR@|$(LIBDIR)|g" $< > $@
-
-$(DESTDIR)$(BINDIR) \
-$(DESTDIR)$(LIBDIR) \
-$(DESTDIR)$(MANDIR)/man1:
-	test -d $@ || mkdir -p $@
-
-$(DESTDIR)$(MANDIR)/man1/%: % $(DESTDIR)$(MANDIR)/man1
-	$(INSTALL) -c -m 644 $< $@
-
-$(DESTDIR)$(BINDIR)/%: % $(DESTDIR)$(BINDIR)
-	$(INSTALL) -c $< $@
-
-$(DESTDIR)$(LIBDIR)/%: % $(DESTDIR)$(LIBDIR)
-	$(INSTALL) -c -m 644 $< $@
 
 
