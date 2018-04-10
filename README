@@ -1,15 +1,21 @@
-# Ugrind readme
-#################
+Ugrind - troff preprocessor to highlight source code
+====================================================
 
-# Presentation
-==============
+Presentation
+------------
 
 Ugrind is a pre-processor for troff which highlights and escapes
 source code. It is a hack of vfontedpr, the utility used by the
 mostly forgotten vgrind script.
 
-# Build
-=======
+Its known languages are C (-lc), C++ (-lc++), CSH (-lcsh), FORTRAN
+(-lfortran), ICON (-lI,) ISP (-lisp), LDL (-ldl), LISP LIKE (-ml),
+MODEL (-lm), MODULA2 (-lmod2), PASCAL (-lp), POSTXML (-lpostxml),
+RATFOR (-lr), RUSSEL (lrussell), SHELL (-lsh), TROFF (-ltr), XML
+(-lxml), and YACC (-lyacc).
+
+Build
+-----
 
 To build and install, run :
 
@@ -21,14 +27,12 @@ To uninstall and clean, run :
     make uninstall
     make clean
 
-
-# License
-=========
+License
+-------
 
 Ugrind and its man page are distributed under the original BSD
 license (LICENSE-bsd4).  The code which highlights the troff
 language, written from scratch, is distributed under the ISC
 license (LICENSE-isc). The language description file (ugrindefs) is
 distributed under the CDDL 1.0 license (LICENSE-cddl.tr).
-
 
