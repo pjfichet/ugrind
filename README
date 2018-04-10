@@ -1,0 +1,40 @@
+# Ugrind readme
+#################
+
+# Presentation
+==============
+
+Ugrind is a pre-processor for troff which highlights and escapes
+source code. It is a hack of vfontedpr, the utility used by the
+mostly forgotten vgrind script.
+
+# Build
+=======
+
+To build and install, run :
+
+    make
+    make install
+
+To uninstall and clean, run :
+
+    make uninstall
+    make clean
+
+
+# License
+=========
+
+Ugrind and its man page are distributed under the original BSD
+license <LICENSE-bsd4>.  The code which highlights the troff
+language, written from scratch, is distributed under a two clause
+BSD license <LICENSE-bsd2>.  The language description file
+(ugrindefs) is distributed under the CDDL 1.0 license
+<LICENSE-cddl.tr>.
+
+# Help and bugs
+===============
+
+You can send questions, bugs and patches at help at utroff dot
+org.
+

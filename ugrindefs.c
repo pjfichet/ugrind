@@ -15,7 +15,7 @@
 /*
  * Portions Copyright (c) 2013 Pierre-Jean Fichet, Amiens, France
  *
- * $Id: ugrindefs.c,v 0.4 2013/03/24 11:03:25 pj Exp pj $
+ * $Id: ugrindefs.c,v 0.5 2017/12/06 08:44:08 pj Exp pj $
  */
 	  /* from UCB 5.1 (Berkeley) 6/5/85 */
 

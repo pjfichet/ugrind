@@ -1,0 +1,248 @@
+.\"
+.\" DI $Id: ugrind.tr,v 1.14 2014/03/21 10:04:17 pj Exp pj $
+.\" DA Written by Dave Presotto and William Joy, modified by Gunnar Ritter and Pierre‐Jean Fichet
+.\" DS Utroff ugrind manual
+.\" DT Utroff ugrind manual
+.\" DK utroff ugrind vgrind vfontedpr troff nroff heirloom tmac xml
+.
+.
+.
+.TH UGRIND 1 '2017‐12‐06'
+.
+.
+.
+.SH NAME
+.PP
+\fBugrind\fR - troff preprocessor which highlight source
+code
+.
+.
+.
+.SH SYNOPSIS
+.PP
+\fB@BINDIR@/ugrind\fR
+[\fB-d\fR \fIfile\fR]
+[\fB-h\fR \fIheader\fR]
+[\fB-l\fR \fIlanguage\fR]
+[\fB-t\fR \fIsize\fR]
+\fIname\fR ...
+.
+.
+.
+.SH DESCRIPTION
+.PP
+\fIUgrind\fR insert string definition in files to
+highlight the source code they contain. \fIUgrind\fR runs in
+two basic modes: regular mode or whole file mode.
+.IP \(bu
+In regular mode, \fIugrind\fR only highlight code which is
+between the \fBvS\fR and \fBvE\fR macros. The language is
+specified by the first argument of the \fBvs\fR macro.
+.IP \(bu
+In whole file mode, ugrind highlight the whole file. The
+language is specified by the \fB-l\fR argument.
+.PP
+The options are:
+.TP
+\&\fB-d\fR
+Specifies an alternate language definitions file (default is
+@LIBDIR@/ugrindefs).
+.TP
+\&\fB-h\fR
+Specify a header string. The header will be printed as
+argument of the \fB.vH\fR macro.
+.TP
+\&\fB-l\fR
+Enter whole file mode, and pecifies the language to use.
+.TP
+\&\fB-t\fR
+Specify a nondefault tab size (default is 4).
+.PP
+Currently, known languages are
+C (\fB-lc\fR),
+C++ (\fB-lc++\fR),
+CSH (\fB-lcsh\fR),
+FORTRAN (\fB-lfortran\fR),
+ICON (\fB-lI\fR,)
+ISP (\fB-lisp\fR),
+LDL (\fB-ldl\fR),
+LISP LIKE (\fB-ml\fR),
+MODEL (\fB-lm\fR),
+MODULA2 (\fB-lmod2\fR),
+PASCAL (\fB-lp\fR),
+POSTXML (\fB-lpostxml\fR),
+RATFOR (\fB-lr\fR),
+RUSSEL (\fBlrussell\fR),
+SHELL (\fB-lsh\fR),
+TROFF (\fB-ltr\fR),
+XML (\fB-lxml\fR),
+and
+YACC (\fB-lyacc\fR),
+.
+.
+.
+.SH PROGRAMMING STYLE
+.PP
+\fIUgrind\fR assumes that a certain programming style is
+followed:
+.TP
+\&C and C++
+Functions names can be preceded on a line only by spaces,
+tabs, or an asterisk. The parenthesized arguments must also
+be on the same line.
+.TP
+\&PASCAL
+Function names need to appear on the same line as the
+keywords \fIfuctions\fR or \fIprocedure\fR.
+.TP
+\&MODEL
+Function names need to appear on the same line as the keywords
+\fIis beginproc\fR.
+.TP
+\&TROFF
+Between \fB.vS\fR and \fB.vE\fR macros in regular mode, and
+in the whole file in whole file mode, \fIugrind\fR will take
+care to escape all the commands, macros, strings and number
+register that could be interpreted by troff. That means that
+to highlight troff source code, one juste has to write the
+code as is. That also means that it is not possible to
+insert formatting commands inside the code that has to be
+highlighted.
+.PP
+More generally, arbitrary formatting styles for programs
+mostly look bad. The use of spaces to align source code
+fails miserably; if you plan to \fIugrind\fR your program you
+should use tabs. This is somewhat inevitable since the font
+used by \fIugrind\fR is variable width.
+.
+.
+.
+.SH MACROS AND STRINGS
+.PP
+To highlight code, \fIugrind\fR insert strings in the file,
+and use some macros, so, to format the output of \fIugrind\fR
+with \fItroff\fR, the following strings and macros must be
+defined by your macro file.
+.
+.
+.
+.SS Macros
+.RS 3
+.TP
+\&vS
+In regular mode, start a code block to highlight. The first
+argument define the language. See the \fB-l\fR option to
+get the list of supported languages.
+.TP
+\&vE
+In regular mode, end a code block to highlight.
+.TP
+\&vF
+In whole file mode, start a new file. The first argument is the
+name of the file.
+.TP
+\&vH
+The header defined by the \fB-h\fR option is defined as
+argument of this macro.
+.TP
+\&vO
+Indicate that a function begins on the next line. The first
+argument is the function name.
+.TP
+\&vC
+Indicate that a function gets closed on the previous line.
+.
+.
+.
+.SS Strings
+.RS 3
+.TP
+\&+C
+Begin a comment,
+.TP
+\&‐C
+End a comment,
+.TP
+\&+K
+Begin a keyword,
+.TP
+\&‐K
+End a keyword,
+.TP
+\&+S
+Begin a string,
+.TP
+\&‐S
+End a string,
+.TP
+\&+V
+Begin a variable,
+.TP
+\&‐V
+End a variable,
+.TP
+\&e
+a slash (\),
+.TP
+\&‐
+a tiret (-),
+.TP
+\&_
+a bottom tiret (_).
+.
+.
+.
+.SH HISTORY
+.PP
+\fIUgrind\fR is a hack of \fIvfontedpr\fR (that probably
+means
+\fIvisual‐font‐edit‐print\fR), which is the preprocesor used by
+the mostly forgotten \fIvgrind\fR script, which aims to
+visually "grind nice listing of programms" with troff. The
+code that vfontedpr use to read the language description
+file is "stolen almost totally from \fItermcap\fR".
+\fIVgrind\fR and \fIvfontedpr\fR have been written by Dave
+Presotto and William Joy, for 4.3BSD‐Tahoe. They have been
+modified by Gunnar Ritter as part of the \fIHeirloom
+documentation tools\fR.
+.
+.
+.
+.SH LICENSE
+.PP
+\fIUgrind\fR and its man page are distributed under the
+original BSD
+license. The code which highlight troff
+language, written from scratch, is distributed under a
+two clause BSD
+license. The language description file
+(\fI@LIBDIR@/ugrindefs\fR) is distributed under the
+CDDL 1.0
+License.
+.
+.
+.
+.SH FILES
+.PP
+\fI@BINDIR@/ugrind\fR preprocessor
+\fI@LIBDIR@/ugrindefs\fR language descriptions
+.
+.
+.
+.SH SEE ALSO
+.PP
+troff(1)
+.
+.
+.
+.SH BUGS & HELP
+.PP
+You can send questions, bugs and patches at help at utroff dot org.
+.
+.
+.
+.SH AUTHORS
+.PP
+Written by Dave Presotto and William Joy. Modified by Gunnar
+Ritter for the \fIHeirloom Project\fR and later Pierre‐Jean
+Fichet for \fIUtroff\fR.

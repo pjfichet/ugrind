@@ -15,7 +15,7 @@
 /*
  * Portions Copyright (c) 2013 Pierre-Jean Fichet, Amiens, France
  *
- * $Id: ugrind.c,v 0.8 2013/03/24 11:01:13 pj Exp pj $
+ * $Id: ugrind.c,v 0.9 2017/12/06 08:42:05 pj Exp pj $
  */
 
 #include <ctype.h>

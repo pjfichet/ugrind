@@ -5,5 +5,5 @@
 #else
 #define	USED
 #endif
-static const char rcsid[] USED = "$Id: version.c,v 0.15 2014/03/12 14:30:09 pj Exp pj $";
+static const char rcsid[] USED = "$Id: version.c,v 0.16 2017/12/06 08:44:50 pj Exp pj $";
 

@@ -27,7 +27,7 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: ugrindroff.c,v 0.5 2017/12/06 08:30:41 pj Exp pj $
+ * $Id: ugrindroff.c,v 0.6 2017/12/06 08:34:41 pj Exp pj $
  */
 
 /*
