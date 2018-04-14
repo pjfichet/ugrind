@@ -1,7 +1,7 @@
 # Packaging directory
 DESTDIR=
 # Prefix directory
-PREFIX=/opt/utroff
+PREFIX=$(HOME)/dev
 # Where to place binaries
 # and where to find utroff tools
 BINDIR=$(PREFIX)/bin
