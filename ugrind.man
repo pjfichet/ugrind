@@ -1,63 +1,66 @@
 .\"
-.\" This code contains changes by
-.\"      Gunnar Ritter, Freiburg i. Br., Germany, 2005. All rights reserved.
-.\"
-.\" Conditions 1, 2, and 4 and the no-warranty notice below apply
-.\" to these changes.
-.\"
-.\"
-.\" Copyright (c) 1980 Regents of the University of California.
-.\" 	All rights reserved.
-.\"
-.\" Redistribution and use in source and binary forms, with or without
-.\" modification, are permitted provided that the following conditions
-.\" are met:
-.\" 1. Redistributions of source code must retain the above copyright
-.\"    notice, this list of conditions and the following disclaimer.
-.\" 2. Redistributions in binary form must reproduce the above copyright
-.\"    notice, this list of conditions and the following disclaimer in the
-.\"    documentation and/or other materials provided with the distribution.
-.\" 3. All advertising materials mentioning features or use of this software
-.\"    must display the following acknowedgement:
-.\" 	This product includes software developed by the University of
-.\" 	California, Berkeley and its contributors.
-.\" 4. Neither the name of the University nor the names of its contributors
-.\"    may be used to endorse or promote products derived from this software
-.\"    without specific prior written permission.
-.\"
-.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
-.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
-.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
-.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
-.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
-.\" SUCH DAMAGE.
-.\"
-.\"	from 4.3BSD-Tahoe vgrind.1	6.2 (Berkeley) 5/5/86
-.\".TH VGRIND 1 "May 5, 1986"
-.\"
-.\" Sccsid @(#)vgrind.1b	1.3 (gritter) 11/6/05
-.\"
-.\"
-.\" DI $Id: ugrind.tr,v 1.14 2014/03/21 10:04:17 pj Exp pj $
-.\" DA Written by Dave Presotto and William Joy, modified by Gunnar Ritter and Pierre‐Jean Fichet
+.ig
+
+This code contains changes by:
+        Gunnar Ritter, Freiburg i. Br., Germany, 2005.
+        Pierre-Jean Fichet, Amiens, France, 2012.
+
+Conditions 1, 2, and 4 and the no-warranty notice below
+apply to these changes.
+
+
+Copyright (c) 1980 Regents of the University of California.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or
+without modification, are permitted provided that the
+following conditions are met:
+ 1. Redistributions of source code must retain the above
+copyright notice, this list of conditions and the following
+disclaimer.
+ 2. Redistributions in binary form must reproduce the above
+copyright notice, this list of conditions and the following
+disclaimer in the documentation and/or other materials
+provided with the distribution.
+ 3. All advertising materials mentioning features or use of
+this software must display the following acknowedgement:
+This product includes software developed by the University
+of California, Berkeley and its contributors.
+ 4. Neither the name of the University nor the names of its
+contributors may be used to endorse or promote products
+derived from this software without specific prior written
+permission.
+
+THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS
+‘‘AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING,
+BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS
+BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+from 4.3BSD-Tahoe vgrind.1      6.2 (Berkeley) 5/5/86
+..
+.\" DA Written by Dave Presotto and William Joy, modified by Gunnar Ritter and Pierre-Jean Fichet
 .\" DS Utroff ugrind manual
 .\" DT Utroff ugrind manual
 .\" DK utroff ugrind vgrind vfontedpr troff nroff heirloom tmac xml
 .
 .
 .
-.TH UGRIND 1 '2017‐12‐06'
+.TH UGRIND 1 2018-04-14
 .
 .
 .
 .SH NAME
 .PP
-\fBugrind\fR - troff preprocessor which highlight source
+\fBugrind\fR − troff preprocessor which highlight source
 code
 .
 .
@@ -65,10 +68,10 @@ code
 .SH SYNOPSIS
 .PP
 \fB@BINDIR@/ugrind\fR
-[\fB-d\fR \fIfile\fR]
-[\fB-h\fR \fIheader\fR]
-[\fB-l\fR \fIlanguage\fR]
-[\fB-t\fR \fIsize\fR]
+[\fB−d\fR \fIfile\fR]
+[\fB−h\fR \fIheader\fR]
+[\fB−l\fR \fIlanguage\fR]
+[\fB−t\fR \fIsize\fR]
 \fIname\fR ...
 .
 .
@@ -84,44 +87,44 @@ between the \fBvS\fR and \fBvE\fR macros. The language is
 specified by the first argument of the \fBvs\fR macro.
 .IP \(bu
 In whole file mode, ugrind highlight the whole file. The
-language is specified by the \fB-l\fR argument.
+language is specified by the \fB−l\fR argument.
 .PP
 The options are:
 .TP
-\&\fB-d\fR
+\&\fB−d\fR
 Specifies an alternate language definitions file (default is
 @LIBDIR@/ugrindefs).
 .TP
-\&\fB-h\fR
+\&\fB−h\fR
 Specify a header string. The header will be printed as
 argument of the \fB.vH\fR macro.
 .TP
-\&\fB-l\fR
+\&\fB−l\fR
 Enter whole file mode, and pecifies the language to use.
 .TP
-\&\fB-t\fR
+\&\fB−t\fR
 Specify a nondefault tab size (default is 4).
 .PP
 Currently, known languages are
-C (\fB-lc\fR),
-C++ (\fB-lc++\fR),
-CSH (\fB-lcsh\fR),
-FORTRAN (\fB-lfortran\fR),
-ICON (\fB-lI\fR,)
-ISP (\fB-lisp\fR),
-LDL (\fB-ldl\fR),
-LISP LIKE (\fB-ml\fR),
-MODEL (\fB-lm\fR),
-MODULA2 (\fB-lmod2\fR),
-PASCAL (\fB-lp\fR),
-POSTXML (\fB-lpostxml\fR),
-RATFOR (\fB-lr\fR),
+C (\fB−lc\fR),
+C++ (\fB−lc++\fR),
+CSH (\fB−lcsh\fR),
+FORTRAN (\fB−lfortran\fR),
+ICON (\fB−lI\fR,)
+ISP (\fB−lisp\fR),
+LDL (\fB−ldl\fR),
+LISP LIKE (\fB−ml\fR),
+MODEL (\fB−lm\fR),
+MODULA2 (\fB−lmod2\fR),
+PASCAL (\fB−lp\fR),
+POSTXML (\fB−lpostxml\fR),
+RATFOR (\fB−lr\fR),
 RUSSEL (\fBlrussell\fR),
-SHELL (\fB-lsh\fR),
-TROFF (\fB-ltr\fR),
-XML (\fB-lxml\fR),
+SHELL (\fB−lsh\fR),
+TROFF (\fB−ltr\fR),
+XML (\fB−lxml\fR),
 and
-YACC (\fB-lyacc\fR),
+YACC (\fB−lyacc\fR),
 .
 .
 .
@@ -175,7 +178,7 @@ defined by your macro file.
 .TP
 \&vS
 In regular mode, start a code block to highlight. The first
-argument define the language. See the \fB-l\fR option to
+argument define the language. See the \fB−l\fR option to
 get the list of supported languages.
 .TP
 \&vE
@@ -186,7 +189,7 @@ In whole file mode, start a new file. The first argument is the
 name of the file.
 .TP
 \&vH
-The header defined by the \fB-h\fR option is defined as
+The header defined by the \fB−h\fR option is defined as
 argument of this macro.
 .TP
 \&vO
@@ -204,32 +207,32 @@ Indicate that a function gets closed on the previous line.
 \&+C
 Begin a comment,
 .TP
-\&‐C
+\&-C
 End a comment,
 .TP
 \&+K
 Begin a keyword,
 .TP
-\&‐K
+\&-K
 End a keyword,
 .TP
 \&+S
 Begin a string,
 .TP
-\&‐S
+\&-S
 End a string,
 .TP
 \&+V
 Begin a variable,
 .TP
-\&‐V
+\&-V
 End a variable,
 .TP
 \&e
 a slash (\),
 .TP
-\&‐
-a tiret (-),
+\&-
+a tiret (−),
 .TP
 \&_
 a bottom tiret (_).
@@ -240,13 +243,13 @@ a bottom tiret (_).
 .PP
 \fIUgrind\fR is a hack of \fIvfontedpr\fR (that probably
 means
-\fIvisual‐font‐edit‐print\fR), which is the preprocesor used by
+\fIvisual-font-edit-print\fR), which is the preprocesor used by
 the mostly forgotten \fIvgrind\fR script, which aims to
 visually "grind nice listing of programms" with troff. The
 code that vfontedpr use to read the language description
 file is "stolen almost totally from \fItermcap\fR".
 \fIVgrind\fR and \fIvfontedpr\fR have been written by Dave
-Presotto and William Joy, for 4.3BSD‐Tahoe. They have been
+Presotto and William Joy, for 4.3BSD-Tahoe. They have been
 modified by Gunnar Ritter as part of the \fIHeirloom
 documentation tools\fR.
 .
@@ -255,14 +258,13 @@ documentation tools\fR.
 .SH LICENSE
 .PP
 \fIUgrind\fR and its man page are distributed under the
-original BSD
-license. The code which highlight troff
+bsd4 license.
+The code which highlight troff
 language, written from scratch, is distributed under a
-two clause BSD
-license. The language description file
+bsd2 license.
+The language description file
 (\fI@LIBDIR@/ugrindefs\fR) is distributed under the
-CDDL 1.0
-License.
+cddl license.
 .
 .
 .
@@ -282,5 +284,5 @@ troff(1)
 .SH AUTHORS
 .PP
 Written by Dave Presotto and William Joy. Modified by Gunnar
-Ritter for the \fIHeirloom Project\fR and later by
-Pierre‐Jean Fichet for \fIUtroff\fR.
+Ritter for the \fIHeirloom Project\fR and later Pierre-Jean
+Fichet for \fIUtroff\fR.
