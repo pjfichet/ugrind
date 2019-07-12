@@ -1,14 +1,14 @@
 # Packaging directory
 DESTDIR=
 # Prefix directory
-PREFIX=$(HOME)/dev
+PREFIX=$(HOME)/.local
 # Where to place binaries
 # and where to find utroff tools
 BINDIR=$(PREFIX)/bin
 # Where to place manuals
-MANDIR=$(PREFIX)/man
+MANDIR=$(PREFIX)/share/man
 # Where to place libraries
-LIBDIR=$(PREFIX)/lib/
+LIBDIR=$(PREFIX)/share
 
 # C compiler
 CC=cc

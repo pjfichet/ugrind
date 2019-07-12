@@ -1,4 +1,4 @@
-PREFIX=$(HOME)/dev
+PREFIX=$(HOME)/.local
 BINDIR=$(PREFIX)/bin
 ROFF=$(BINDIR)/roff
 POST=$(BINDIR)/pdf
